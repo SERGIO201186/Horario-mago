@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Recordatorio de Mago</title>
+<style>
+  html, body {
+    margin:0; padding:0; height:100%; overflow:hidden;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background:#0b1d3a; color:white;
+    transition: background-color 0.25s ease;
+  }
+  #reposo {
+    height:100%;
+    display:flex; align-items:center; justify-content:center; flex-direction:column;
+    text-align:center;
+  }
+  #reposo h1 { font-size: 3em; margin-bottom:0.2em; }
+  #reloj { font-size: 2.2em; opacity:0.85; }
+  #fecha { font-size: 1.3em; opacity:0.6; margin-top:10px; }
+
+  #alarma {
+    display:none;
+    height:100%;
+    text-align:center;
+    align-items:center; justify-content:center; flex-direction:column;
+  }
+  #alarma img {
+    max-width:55%; max-height:35vh;
+    border-radius: 24px;
+    border: 8px solid white;
+    margin-bottom: 25px;
+    object-fit: cover;
+  }
+  #mensaje { font-size: 3.4em; font-weight:bold; margin: 10px 40px; line-height:1.2; }
+  #dosis { font-size: 1.9em; margin-bottom: 40px; opacity:0.9; }
+  #confirmar {
+    font-size: 2.6em; padding: 28px 60px; border-radius: 30px;
+    border:none; background:#1abc54; color:white; font-weight:bold;
+    cursor:pointer; box-shadow: 0 6px 0 #0e7d38;
+  }
+  #confirmar:active { transform: translateY(4px); box-shadow: 0 2px 0 #0e7d38; }
+
+  #iniciar {
+    position:fixed; bottom:16px; right:16px; opacity:0.2; font-size:0.9em;
+    padding:12px 22px; border-radius:10px; border:none; background:#333; color:white;
+  }
+
+  .flash-a { background:#e2231a !important; }
+  .flash-b { background:#ffcc00 !important; color:#111; }
+</style>
+</head>
+<body>
+
+  <div id="reposo">
+    <h1>💊 Recordatorio de Mago</h1>
+    <div id="reloj"></div>
+    <div id="fecha"></div>
+  </div>
+
+  <div id="alarma">
+    <img id="alarma-img" src="" alt="medicamento">
+    <div id="mensaje"></div>
+    <div id="dosis"></div>
+    <button id="confirmar">✅ YA LO TOMÉ</button>
+  </div>
+
+  <button id="iniciar">🔊 Activar sonido (tocar una vez al encender)</button>
+
+<script>
+  // *** PEGA AQUÍ LA URL DE TU WEB APP DE APPS SCRIPT (termina en /exec) ***
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcOHc-MOdDRu9mG1z6WkpafwRxlNaMqjFxan1X6j9LYhEheUdITxKX_lTqPUXD8dsp/exec";
+
+  let vozActiva = false;
+  let alarmaActualId = null;
+  let flashInterval = null;
+
+  document.getElementById('iniciar').addEventListener('click', () => {
+    const u = new SpeechSynthesisUtterance("Sistema de recordatorios activado");
+    u.lang = 'es-MX';
+    speechSynthesis.speak(u);
+    vozActiva = true;
+    document.getElementById('iniciar').style.display = 'none';
+  });
+
+  function actualizarReloj() {
+    const ahora = new Date();
+    document.getElementById('reloj').textContent = ahora.toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'});
+    document.getElementById('fecha').textContent = ahora.toLocaleDateString('es-MX', {weekday:'long', day:'numeric', month:'long'});
+  }
+  setInterval(actualizarReloj, 1000);
+  actualizarReloj();
+
+  function hablar(texto) {
+    if (!vozActiva) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(texto);
+    u.lang = 'es-MX';
+    u.rate = 0.95;
+    speechSynthesis.speak(u);
+  }
+
+  function mostrarAlarma(alarma) {
+    document.getElementById('reposo').style.display = 'none';
+    const div = document.getElementById('alarma');
+    div.style.display = 'flex';
+    document.getElementById('alarma-img').src = alarma.imagen_url || '';
+    document.getElementById('mensaje').textContent = alarma.mensaje_voz;
+    document.getElementById('dosis').textContent = alarma.dosis || '';
+
+    if (alarmaActualId !== alarma.id) {
+      hablar(alarma.mensaje_voz);
+      alarmaActualId = alarma.id;
+    }
+
+    if (!flashInterval) {
+      let toggle = false;
+      flashInterval = setInterval(() => {
+        document.body.className = toggle ? 'flash-a' : 'flash-b';
+        toggle = !toggle;
+      }, 500);
+    }
+
+    document.getElementById('confirmar').onclick = () => confirmar(alarma.fila);
+  }
+
+  function ocultarAlarma() {
+    document.getElementById('alarma').style.display = 'none';
+    document.getElementById('reposo').style.display = 'flex';
+    document.body.className = '';
+    clearInterval(flashInterval);
+    flashInterval = null;
+    alarmaActualId = null;
+  }
+
+  function confirmar(fila) {
+    fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ fila: fila })
+    }).then(() => {
+      ocultarAlarma();
+      revisarAlarmas();
+    }).catch(err => console.error('Error confirmando:', err));
+  }
+
+  function revisarAlarmas() {
+    fetch(SCRIPT_URL)
+      .then(r => r.json())
+      .then(data => {
+        if (data.alarmas && data.alarmas.length > 0) {
+          const alarma = data.alarmas.sort((a,b) => b.minutos_retraso - a.minutos_retraso)[0];
+          mostrarAlarma(alarma);
+        } else {
+          ocultarAlarma();
+        }
+      })
+      .catch(err => console.error('Error consultando alarmas:', err));
+  }
+
+  revisarAlarmas();
+  setInterval(revisarAlarmas, 20000);
+</script>
+
+</body>
+</html>
