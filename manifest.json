@@ -1,0 +1,21 @@
+{
+  "name": "Recordatorio de Mago",
+  "short_name": "Recordatorio",
+  "start_url": "./kiosk_alarma.html",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#0b1d3a",
+  "theme_color": "#0b1d3a",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
