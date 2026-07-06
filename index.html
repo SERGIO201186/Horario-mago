@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Recordatorio de Mago</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#0b1d3a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Recordatorio">
 <style>
   html, body {
     margin:0; padding:0; height:100%; overflow:hidden;
@@ -82,6 +90,28 @@
     speechSynthesis.speak(u);
     vozActiva = true;
     document.getElementById('iniciar').style.display = 'none';
+    activarWakeLock();
+  });
+
+  let wakeLock = null;
+  async function activarWakeLock() {
+    try {
+      if ('wakeLock' in navigator) {
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeLock.addEventListener('release', () => {
+          console.log('Wake Lock liberado, se intentará de nuevo si vuelve a estar visible');
+        });
+      }
+    } catch (err) {
+      console.error('No se pudo activar wake lock:', err);
+    }
+  }
+
+  // Si Android libera el wake lock (ej. al volver de estar oculta), se vuelve a pedir
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && vozActiva) {
+      activarWakeLock();
+    }
   });
 
   function actualizarReloj() {
