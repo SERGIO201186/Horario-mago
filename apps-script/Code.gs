@@ -90,6 +90,27 @@ function configurarHorario() {
   sheet.getRange(2, 3, filas.length, 1).setNumberFormat('hh:mm');
 }
 
+// Inserta una dosis "vencida" (hace 1 minuto) para probar que la app
+// muestra la alarma correctamente. Ejecutar manualmente desde el editor
+// (Ejecutar > crearAlarmaDePrueba) y luego borrar esa fila en la hoja
+// cuando termines de probar.
+function crearAlarmaDePrueba() {
+  const sheet = SpreadsheetApp.getActive().getSheetByName(HOJA);
+  const ahora = new Date();
+  const haceUnMinuto = new Date(ahora.getTime() - 60000);
+  sheet.appendRow([
+    sheet.getLastRow(),
+    new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate()),
+    new Date(1899, 11, 30, haceUnMinuto.getHours(), haceUnMinuto.getMinutes()),
+    'Prueba',
+    'Medicamento de prueba',
+    '1 dosis',
+    false,
+    '',
+    avatarBebe('Prueba')
+  ]);
+}
+
 function generarDosis() {
   function horasDeTratamiento(inicio, intervaloH, dias) {
     const total = (dias * 24) / intervaloH;
