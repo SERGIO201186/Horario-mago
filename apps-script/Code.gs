@@ -14,10 +14,21 @@
  *
  * Columnas de la pestaña "Horario":
  *   A fila_id | B fecha | C hora | D bebe | E medicamento | F dosis
- *   G confirmada | H confirmada_en
+ *   G confirmada | H confirmada_en | I imagen_url
  */
 
 const HOJA = 'Horario';
+
+// Avatar de color por bebé (SVG embebido, sin depender de ningún servidor externo)
+function avatarBebe(bebe) {
+  const color = bebe === 'Danna' ? '#ff6fa5' : '#4a90d9';
+  const inicial = bebe.charAt(0);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400">`
+    + `<rect width="400" height="400" fill="${color}"/>`
+    + `<text x="200" y="270" font-size="220" font-family="Arial, sans-serif" font-weight="bold" fill="#ffffff" text-anchor="middle">${inicial}</text>`
+    + `</svg>`;
+  return 'data:image/svg+xml,' + encodeURIComponent(svg);
+}
 
 function doGet(e) {
   const sheet = SpreadsheetApp.getActive().getSheetByName(HOJA);
@@ -26,7 +37,7 @@ function doGet(e) {
   const alarmas = [];
 
   for (let i = 1; i < datos.length; i++) {
-    const [id, fecha, hora, bebe, medicamento, dosis, confirmada] = datos[i];
+    const [id, fecha, hora, bebe, medicamento, dosis, confirmada, , imagenUrl] = datos[i];
     if (confirmada === true) continue;
 
     const programada = combinarFechaHora(fecha, hora);
@@ -36,7 +47,7 @@ function doGet(e) {
     alarmas.push({
       id: id,
       fila: i + 1,
-      imagen_url: '',
+      imagen_url: imagenUrl,
       mensaje_voz: `Dale a ${bebe} su ${medicamento}`,
       dosis: dosis,
       minutos_retraso: minutosRetraso
@@ -68,11 +79,11 @@ function configurarHorario() {
   const existente = ss.getSheetByName(HOJA);
   if (existente) ss.deleteSheet(existente);
   const sheet = ss.insertSheet(HOJA);
-  sheet.appendRow(['fila_id', 'fecha', 'hora', 'bebe', 'medicamento', 'dosis', 'confirmada', 'confirmada_en']);
+  sheet.appendRow(['fila_id', 'fecha', 'hora', 'bebe', 'medicamento', 'dosis', 'confirmada', 'confirmada_en', 'imagen_url']);
 
   const filas = generarDosis();
   filas.forEach((d, idx) => {
-    sheet.appendRow([idx + 1, d.fecha, d.hora, d.bebe, d.medicamento, d.dosis, false, '']);
+    sheet.appendRow([idx + 1, d.fecha, d.hora, d.bebe, d.medicamento, d.dosis, false, '', avatarBebe(d.bebe)]);
   });
 
   sheet.getRange(2, 2, filas.length, 1).setNumberFormat('yyyy-mm-dd');
