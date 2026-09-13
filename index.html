@@ -13,46 +13,52 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Danna y Miguel">
 <style>
+  * { box-sizing: border-box; }
   html, body {
-    margin:0; padding:0; height:100%; overflow:hidden;
+    margin:0; padding:0; height:100%; width:100%; overflow:hidden;
     font-family: 'Segoe UI', Arial, sans-serif;
     background:#0b1d3a; color:white;
     transition: background-color 0.25s ease;
   }
   #reposo {
-    height:100%;
+    height:100%; width:100%; padding: 0 16px;
     display:flex; align-items:center; justify-content:center; flex-direction:column;
     text-align:center;
   }
-  #reposo h1 { font-size: 3em; margin-bottom:0.2em; }
-  #reloj { font-size: 2.2em; opacity:0.85; }
-  #fecha { font-size: 1.3em; opacity:0.6; margin-top:10px; }
+  #reposo h1 { font-size: clamp(1.4rem, 6vmin, 3em); margin-bottom:0.2em; }
+  #reloj { font-size: clamp(1.1rem, 4.5vmin, 2.2em); opacity:0.85; }
+  #fecha { font-size: clamp(0.8rem, 2.8vmin, 1.3em); opacity:0.6; margin-top:10px; }
 
   #alarma {
     display:none;
-    height:100%;
+    height:100%; width:100%; padding: 0 16px;
     text-align:center;
     align-items:center; justify-content:center; flex-direction:column;
   }
   #alarma img {
-    max-width:55%; max-height:35vh;
+    max-width:55%; max-height:30vh;
     border-radius: 24px;
     border: 8px solid white;
     margin-bottom: 25px;
     object-fit: cover;
   }
-  #mensaje { font-size: 3.4em; font-weight:bold; margin: 10px 40px; line-height:1.2; }
-  #dosis { font-size: 1.9em; margin-bottom: 40px; opacity:0.9; }
+  #mensaje {
+    font-size: clamp(1.4rem, 6.5vmin, 3.4em); font-weight:bold;
+    margin: 10px 0; line-height:1.2; max-width:100%;
+    overflow-wrap: break-word;
+  }
+  #dosis { font-size: clamp(1rem, 3.8vmin, 1.9em); margin-bottom: 40px; opacity:0.9; }
   #confirmar {
-    font-size: 2.6em; padding: 28px 60px; border-radius: 30px;
+    font-size: clamp(1.1rem, 4.5vmin, 2.6em); padding: 4vmin 8vmin; border-radius: 30px;
     border:none; background:#1abc54; color:white; font-weight:bold;
-    cursor:pointer; box-shadow: 0 6px 0 #0e7d38;
+    cursor:pointer; box-shadow: 0 6px 0 #0e7d38; max-width:90vw;
   }
   #confirmar:active { transform: translateY(4px); box-shadow: 0 2px 0 #0e7d38; }
 
   #iniciar {
     position:fixed; bottom:16px; right:16px; opacity:0.2; font-size:0.9em;
     padding:12px 22px; border-radius:10px; border:none; background:#333; color:white;
+    max-width: 45vw;
   }
 
   #pausar {
@@ -62,7 +68,7 @@
   body.pausada #pausar { opacity:0.9; background:#c0392b; }
 
   #estado-pausa {
-    display:none; font-size:1.4em; margin-top:20px; opacity:0.7;
+    display:none; font-size: clamp(0.9rem, 3vmin, 1.4em); margin-top:20px; opacity:0.7;
   }
   body.pausada #estado-pausa { display:block; }
   body.pausada #reloj, body.pausada #fecha { opacity:0.25; }
@@ -99,6 +105,7 @@
   let alarmaActualId = null;
   let flashInterval = null;
   let revisionInterval = null;
+  let vozInterval = null;
   let appPausada = localStorage.getItem('appPausada') === 'true';
 
   function actualizarBotonPausa() {
@@ -178,8 +185,10 @@
     document.getElementById('dosis').textContent = alarma.dosis || '';
 
     if (alarmaActualId !== alarma.id) {
-      hablar(alarma.mensaje_voz);
       alarmaActualId = alarma.id;
+      if (vozInterval) clearInterval(vozInterval);
+      hablar(alarma.mensaje_voz);
+      vozInterval = setInterval(() => hablar(alarma.mensaje_voz), 15000);
     }
 
     if (!flashInterval) {
@@ -199,6 +208,7 @@
     document.body.classList.remove('flash-a', 'flash-b');
     clearInterval(flashInterval);
     flashInterval = null;
+    if (vozInterval) { clearInterval(vozInterval); vozInterval = null; }
     alarmaActualId = null;
   }
 

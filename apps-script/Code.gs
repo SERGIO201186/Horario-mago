@@ -48,7 +48,7 @@ function doGet(e) {
       id: id,
       fila: i + 1,
       imagen_url: imagenUrl,
-      mensaje_voz: `Dale a ${bebe} su ${medicamento}`,
+      mensaje_voz: `Vieja huevona, dale a ${bebe} su ${medicamento}`,
       dosis: dosis,
       minutos_retraso: minutosRetraso
     });
