@@ -4,13 +4,16 @@
  * Puesta en marcha (una sola vez):
  *  1. Crea una Hoja de Google nueva > Extensiones > Apps Script.
  *  2. Pega este archivo completo y guarda.
- *  3. Ejecuta la función configurarHorario() (menú Ejecutar). Autoriza los
- *     permisos pedidos. Esto borra la pestaña "Horario" anterior (si existe)
- *     y la recrea con las dosis calculadas en generarDosis().
- *  4. Implementar > Nueva implementación > tipo "Aplicación web":
+ *  3. Ejecuta primero fijarZonaHoraria() (menú Ejecutar) y autoriza los
+ *     permisos pedidos. Esto fija la zona horaria de la hoja para que las
+ *     horas de las dosis no se corran al calcularlas/mostrarlas.
+ *  4. Recién después ejecuta configurarHorario(). Esto borra la pestaña
+ *     "Horario" anterior (si existe) y la recrea con las dosis calculadas
+ *     en generarDosis().
+ *  5. Implementar > Nueva implementación > tipo "Aplicación web":
  *       - Ejecutar como: Yo
  *       - Quién tiene acceso: Cualquier usuario
- *  5. Copia la URL que termina en /exec y pégala como SCRIPT_URL en index.html.
+ *  6. Copia la URL que termina en /exec y pégala como SCRIPT_URL en index.html.
  *
  * Columnas de la pestaña "Horario":
  *   A fila_id | B fecha | C hora | D bebe | E medicamento | F dosis
@@ -18,6 +21,14 @@
  */
 
 const HOJA = 'Horario';
+const ZONA_HORARIA = 'America/Mexico_City';
+
+// Ejecutar UNA VEZ, antes de configurarHorario(), en una ejecución aparte.
+// Fija la zona horaria de la hoja para que las horas de las dosis se
+// calculen y muestren correctamente (evita que se corran varias horas).
+function fijarZonaHoraria() {
+  SpreadsheetApp.getActive().setSpreadsheetTimeZone(ZONA_HORARIA);
+}
 
 // Avatar de color por bebé (SVG embebido, sin depender de ningún servidor externo)
 function avatarBebe(bebe) {
@@ -76,6 +87,7 @@ function combinarFechaHora(fecha, hora) {
 
 function configurarHorario() {
   const ss = SpreadsheetApp.getActive();
+  ss.setSpreadsheetTimeZone(ZONA_HORARIA);
   const existente = ss.getSheetByName(HOJA);
   if (existente) ss.deleteSheet(existente);
   const sheet = ss.insertSheet(HOJA);
