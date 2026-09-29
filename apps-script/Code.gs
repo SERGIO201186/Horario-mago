@@ -5,8 +5,8 @@
  *  1. Crea una Hoja de Google nueva > Extensiones > Apps Script.
  *  2. Pega este archivo completo y guarda.
  *  3. Ejecuta la función configurarHorario() (menú Ejecutar). Autoriza los
- *     permisos pedidos. Esto crea la pestaña "Horario" con las 81 dosis de
- *     Danna y Miguel ya calculadas.
+ *     permisos pedidos. Esto borra la pestaña "Horario" anterior (si existe)
+ *     y la recrea con las dosis calculadas en generarDosis().
  *  4. Implementar > Nueva implementación > tipo "Aplicación web":
  *       - Ejecutar como: Yo
  *       - Quién tiene acceso: Cualquier usuario
@@ -132,15 +132,10 @@ function generarDosis() {
     });
   }
 
-  // Todos inician el 11 de septiembre de 2026
-  agregar('Danna', 'Bactrim suspensión', '3.5 ml', new Date(2026, 8, 11, 20, 0), 12, 7);
-  agregar('Miguel', 'Bactrim suspensión', '2 ml', new Date(2026, 8, 11, 20, 0), 12, 5);
-
-  agregar('Danna', 'Sensizone infantil', '2.5 ml', new Date(2026, 8, 11, 21, 0), 12, 6);
-  agregar('Miguel', 'Sensizone infantil', '0.5 ml', new Date(2026, 8, 11, 21, 0), 12, 6);
-
-  agregar('Danna', 'Cardomicin infantil', '2.5 ml', new Date(2026, 8, 11, 20, 30), 8, 6);
-  agregar('Miguel', 'Mucovibrol gotas', '7 gotas', new Date(2026, 8, 11, 20, 30), 8, 5);
+  // Tratamiento actual de Miguel, inicia el 29 de septiembre de 2026
+  agregar('Miguel', 'Vilona gotas', '20 gotas', new Date(2026, 8, 29, 14, 0), 8, 5);
+  agregar('Miguel', 'Motrin suspensión pediátrica', '1.5 ml', new Date(2026, 8, 29, 14, 30), 8, 3);
+  agregar('Miguel', 'Flumil gotas', '8 gotas', new Date(2026, 8, 29, 15, 0), 8, 5);
 
   filas.sort((a, b) => {
     const ta = new Date(a.fecha.getFullYear(), a.fecha.getMonth(), a.fecha.getDate(), a.hora.getHours(), a.hora.getMinutes());
